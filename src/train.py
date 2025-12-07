@@ -8,10 +8,47 @@ from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import OmegaConf, DictConfig
 
-# add this block
+# ------------------------------------------------------------------
+# fix PyTorch restricted unpickler by allowing all torch.nn modules
+# ------------------------------------------------------------------
 from torch.serialization import add_safe_globals
-from src.models.components.predictors import MLP
-add_safe_globals([MLP])
+import torch.nn as nn
+
+# allow all classes inside torch.nn and torch.nn.modules.*
+safe = []
+
+for module in [
+    nn,
+    nn.modules,
+    nn.modules.activation,
+    nn.modules.container,
+    nn.modules.conv,
+    nn.modules.dropout,
+    nn.modules.linear,
+    nn.modules.normalization,
+    nn.modules.padding,
+    nn.modules.pooling,
+    nn.modules.rnn,
+    nn.modules.sparse,
+]:
+    for name in dir(module):
+        obj = getattr(module, name)
+        if isinstance(obj, type):
+            safe.append(obj)
+
+# and also allow all your custom predictor classes
+try:
+    import src.models.components.predictors as predictors
+    for name in dir(predictors):
+        obj = getattr(predictors, name)
+        if isinstance(obj, type):
+            safe.append(obj)
+except ImportError:
+    pass
+
+add_safe_globals(safe)
+# ------------------------------------------------------------------
+
 
 OmegaConf.register_new_resolver("eval", eval)
 
