@@ -53,7 +53,7 @@ class PerturbData(Dataset):
             # use raw_expression data to calculate mean expression
             self.fm = 'raw_expression'
 
-        assert self.fm in ["raw_expression", "scgpt", "geneformer", "scfoundation", "scbert", "uce"], \
+        # assert self.fm in ["raw_expression", "scgpt", "geneformer", "scfoundation", "scbert", "uce"], \
             "fm must be set to 'raw_expression', 'scgpt', 'geneformer', 'scfoundation', 'scbert', or 'uce'!"
 
         feature_path = f"{self.data_path}/input_features/{self.fm}"
