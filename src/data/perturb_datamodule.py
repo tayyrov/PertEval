@@ -121,6 +121,7 @@ class PertDataModule(LightningDataModule):
             "norman": "norman_2019_raw",
             "replogle_k562": "replogle_2022_k562_essential",
             "replogle_rpe1": "replogle_2022_rpe1",
+            "joung": "joung_2023",
         }
 
         self.batch_size_per_device = batch_size
@@ -145,7 +146,13 @@ class PertDataModule(LightningDataModule):
             else:
                 data_name = self.data_name
             if f"{self.load_scpert_data[data_name]}.h5ad" not in os.listdir("data/"):
-                scpert_loader = getattr(scpert_data, self.load_scpert_data[data_name])
+                try:
+                    scpert_loader = getattr(scpert_data, self.load_scpert_data[data_name])
+                except AttributeError:
+                    available_attrs = [a for a in dir(scpert_data) if not a.startswith("_")]
+                    print(f"Attribute '{self.load_scpert_data[data_name]}' not found in pertpy.data.")
+                    print(f"Available attributes: {available_attrs}")
+                    raise
                 scpert_loader()
         else:
             raise ValueError(f"Data name {self.data_name} not recognized. Choose from: 'norman_1', 'norman_2', "
