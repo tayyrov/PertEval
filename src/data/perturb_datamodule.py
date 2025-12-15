@@ -121,7 +121,6 @@ class PertDataModule(LightningDataModule):
             "norman": "norman_2019_raw",
             "replogle_k562": "replogle_2022_k562_essential",
             "replogle_rpe1": "replogle_2022_rpe1",
-            "joung": "joung_2023",
         }
 
         self.batch_size_per_device = batch_size
