@@ -4,6 +4,7 @@ import pickle as pkl
 
 from typing import Any, Dict, Optional
 from pertpy import data as scpert_data
+import anndata as ad
 
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader
@@ -145,14 +146,10 @@ class PertDataModule(LightningDataModule):
                 data_name = "norman"
             else:
                 data_name = self.data_name
-            if f"{self.load_scpert_data[data_name]}.h5ad" not in os.listdir("data/"):
-                try:
-                    scpert_loader = getattr(scpert_data, self.load_scpert_data[data_name])
-                except AttributeError:
-                    available_attrs = [a for a in dir(scpert_data) if not a.startswith("_")]
-                    print(f"Attribute '{self.load_scpert_data[data_name]}' not found in pertpy.data.")
-                    print(f"Available attributes: {available_attrs}")
-                    raise
+            if data_name == "joung":
+                 pass
+            elif f"{self.load_scpert_data[data_name]}.h5ad" not in os.listdir("data/"):
+                scpert_loader = getattr(scpert_data, self.load_scpert_data[data_name])
                 scpert_loader()
         else:
             raise ValueError(f"Data name {self.data_name} not recognized. Choose from: 'norman_1', 'norman_2', "
@@ -183,8 +180,27 @@ class PertDataModule(LightningDataModule):
                 data_name = "norman"
             else:
                 data_name = self.data_name
-            scpert_loader = getattr(scpert_data, self.load_scpert_data[data_name])
-            adata = scpert_loader()
+            
+            if data_name == "joung":
+                # Manual load for joung since it's missing in pertpy attributes
+                # Try multiple likely locations
+                possible_paths = [
+                    os.path.join(ROOT_DIR, "data", "joung_2023", "joung_2023_raw.h5ad"),
+                    os.path.join(ROOT_DIR, "data", "joung_2023_raw.h5ad"),
+                    os.path.join("data", "joung_2023", "joung_2023_raw.h5ad"), # Relative to CWD
+                ]
+                adata = None
+                for path in possible_paths:
+                    if os.path.exists(path):
+                        print(f"Loading Joung dataset from {path}")
+                        adata = ad.read_h5ad(path)
+                        break
+                
+                if adata is None:
+                     raise FileNotFoundError(f"Joung dataset not found. Checked paths: {possible_paths}")
+            else:
+                scpert_loader = getattr(scpert_data, self.load_scpert_data[data_name])
+                adata = scpert_loader()
 
             self.train_dataset = PerturbData(adata, self.data_path, self.spectral_parameter,
                                              self.spectra_parameters, self.fm, stage="train")
