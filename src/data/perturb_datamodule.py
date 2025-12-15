@@ -74,8 +74,7 @@ class PertDataModule(LightningDataModule):
         """Initialize a `PertDataModule`.
 
         :param data_dir: The data directory. Defaults to `""`.
-        :param data_name: The name of the dataset. Defaults to `"norman"`. Can pick from "norman", "replogle_k562", and
-        "replogle_rpe1".
+        :param data_name: The name of the dataset. Defaults to `"norman"`. Can pick from "norman", "replogle_k562", "replogle_rpe1", and "joung".
         :param batch_size: The batch size. Defaults to `64`.
         :param num_workers: The number of workers. Defaults to `0`.
         :param pin_memory: Whether to pin memory. Defaults to `False`.
@@ -122,6 +121,7 @@ class PertDataModule(LightningDataModule):
             "norman": "norman_2019_raw",
             "replogle_k562": "replogle_2022_k562_essential",
             "replogle_rpe1": "replogle_2022_rpe1",
+            "joung": "joung_2023",
         }
 
         self.batch_size_per_device = batch_size
@@ -136,11 +136,11 @@ class PertDataModule(LightningDataModule):
         within. In case of multi-node training, the execution of this hook depends upon `self.prepare_data_per_node()`.
 
         Downloading:
-        Currently, supports "norman", "replogle_k562, replogle_rpe1" datasets.
+        Currently, supports "norman", "replogle_k562, replogle_rpe1", "joung" datasets.
 
         Do not use it to assign state (self.x = y).
         """
-        if self.data_name in ["norman_1", "norman_2", "replogle_k562", "replogle_rpe1"]:
+        if self.data_name in ["norman_1", "norman_2", "replogle_k562", "replogle_rpe1", "joung"]:
             if "norman" in self.data_name:
                 data_name = "norman"
             else:
@@ -150,7 +150,7 @@ class PertDataModule(LightningDataModule):
                 scpert_loader()
         else:
             raise ValueError(f"Data name {self.data_name} not recognized. Choose from: 'norman_1', 'norman_2', "
-                             f"'replogle_k562', or replogle_rpe1")
+                             f"'replogle_k562', 'replogle_rpe1', or 'joung'")
 
     def setup(self, stage: Optional[str] = None) -> None:
         """Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
