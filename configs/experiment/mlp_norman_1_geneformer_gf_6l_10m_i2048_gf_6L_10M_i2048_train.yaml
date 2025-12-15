@@ -1,0 +1,60 @@
+# @package _global_
+
+# run with `python src/train.py experiment=mlp_norman_1_geneformer_gf_6l_10m_i2048_gf_6L_10M_i2048_train.yaml`
+
+model_type: mlp
+defaults:
+- override /model: mlp
+- override /logger: wandb
+total_genes: 2060
+emb_dim: 256
+hidden_dim: 128
+mean_adjusted: false
+save_dir: ${paths.data_dir}/${data.data_name}/pert_effects/${data.eval_pert}/pert_effect_pred_${data.fm}.pkl
+data:
+  data_name: norman_1
+  data_type: geneformer_gf_6l_10m_i2048
+  split: 0.0
+  deg_eval: false
+  eval_pert: null
+  replicate: 0
+  batch_size: 64
+  fm: geneformer_gf_6l_10m_i2048
+  num_workers: 4
+  pin_memory: true
+trainer:
+  max_epochs: 100
+  accelerator: gpu
+  devices: 1
+callbacks:
+  learning_rate_monitor:
+    _target_: lightning.pytorch.callbacks.LearningRateMonitor
+    logging_interval: epoch
+logger:
+  wandb:
+    tags:
+    - ${model_type}
+    - ${data.data_name}
+    - ${data.fm}
+    - split_${data.split}
+    - replicate_${data.replicate}
+    - cellreprogrammer
+    group: ${model_type}_${data.data_name}_${data.split}
+    project: perteval-cellreprogrammer
+model:
+  optimizer:
+    _target_: torch.optim.Adam
+    _partial_: true
+    lr: 5.0e-06
+    weight_decay: 0
+  net:
+    _target_: src.models.components.predictors.MLP
+    in_dim: ${eval:'${emb_dim}*2'}
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    _partial_: true
+    mode: min
+    factor: 0.1
+    patience: 10
+    min_lr: 5.0e-09
+  data_name: ${data.data_name}
